@@ -297,15 +297,25 @@ task.spawn(function()
 	while task.wait(0.5) do
 		if _G.IsRollingFruit then task.wait(1); continue end
 
+		-- ÉP BUỘC CẦM VŨ KHÍ BẰNG LỆNH CỦA SERVER
 		pcall(function()
 			if Player.Character then
 				local bp = Player:FindFirstChild("Backpack")
 				if bp then
-				    -- ENDGAME EQUIP
+				    -- ENDGAME: Ép Server móc Strongest In History ra dùng
 				    if _G.EndgameStarted then
-				        local class = bp:FindFirstChild("Strongest In History")
-				        if class then Player.Character.Humanoid:EquipTool(class) end
+				        -- Nếu thấy nó nằm trong túi (tức là chưa cầm trên tay)
+				        if bp:FindFirstChild("Strongest In History") then
+				            local equipRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("EquipWeapon")
+				            if equipRemote then
+				                equipRemote:FireServer("Equip", "Strongest In History")
+				            else
+				                -- Backup lỡ Remote hỏng
+				                Player.Character.Humanoid:EquipTool(bp["Strongest In History"])
+				            end
+				        end
 				    else
+				        -- Chưa Endgame thì xài Light hoặc vũ khí cũ
     					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
     					if lightTool then Player.Character.Humanoid:EquipTool(lightTool)
     					elseif not Player.Character:FindFirstChildWhichIsA("Tool") then
