@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 🔥 KAITUN SAILOR 2 (BẢN ĐỘ ENDGAME SUKUNA - CHỐNG CRASH TUYỆT ĐỐI)
+-- 🔥 KAITUN SAILOR 2 (BẢN ĐỘ ENDGAME SUKUNA - CHỐNG CRASH & AUTO EQUIP CHUẨN)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -297,47 +297,44 @@ task.spawn(function()
 	while task.wait(0.5) do
 		if _G.IsRollingFruit then task.wait(1); continue end
 
-		-- HỆ THỐNG ÉP TRANG BỊ VŨ KHÍ (VƯỢT RÀO CUSTOM INVENTORY)
+		-- HỆ THỐNG TRANG BỊ VŨ KHÍ CHUẨN XÁC NHẤT
 		pcall(function()
 			local char = Player.Character
 			if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+				local bp = Player:FindFirstChild("Backpack")
 				
-				-- 👑 NẾU ĐANG Ở ENDGAME
 				if _G.EndgameStarted then
-				    -- 1. Quét xem trên tay CÓ ĐANG CẦM class Sukuna không?
-				    local equipped = false
-				    for _, v in pairs(char:GetChildren()) do
-				        if string.find(string.lower(v.Name), "strongest") then
-				            equipped = true
-				            break
-				        end
-				    end
+				    -- 1. Kiểm tra xem trên tay đã cầm chưa?
+				    local weaponOnBody = char:FindFirstChild("Strongest In History") or char:FindFirstChild("StrongestinHistory")
 				    
-				    -- 2. Nếu tay đang trống (Do vừa chết, hoặc do sếp cố tình bấm phím 1 cất đi)
-				    if not equipped then
-				        -- Đợi 2 giây sau mỗi lần gọi để chống spam "rút/cất" liên tục
-				        if tick() - (_G.LastEquipFire or 0) > 2 then
-				            _G.LastEquipFire = tick()
-				            local equipRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("EquipWeapon")
-				            if equipRemote then
-				                -- Ép Server lôi vũ khí ra (Bất chấp nó đang trong túi hay trong kho)
-				                equipRemote:FireServer("Equip", "Strongest In History")
+				    -- 2. Nếu tay chưa cầm
+				    if not weaponOnBody then
+				        -- 3. Kiểm tra xem nó có nằm trong túi (Backpack) không?
+				        local weaponInBag = bp and (bp:FindFirstChild("Strongest In History") or bp:FindFirstChild("StrongestinHistory"))
+				        
+				        if weaponInBag then
+				            -- BƯỚC QUAN TRỌNG: Lôi từ túi ra tay!
+				            char.Humanoid:EquipTool(weaponInBag)
+				        else
+				            -- Không có trên tay, cũng chẳng có trong túi -> Bắn Remote để Server nhét vào túi
+				            if tick() - (_G.LastEquipFire or 0) > 2 then
+				                _G.LastEquipFire = tick()
+				                local equipRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("EquipWeapon")
+				                if equipRemote then
+				                    equipRemote:FireServer("Equip", "Strongest In History")
+				                end
 				            end
 				        end
 				    end
-				    
-				-- ⚔️ NẾU CHƯA ENDGAME (Logic cũ cho lúc farm tân thủ)
 				else
-				    if not char:FindFirstChildWhichIsA("Tool") then
-				        local bp = Player:FindFirstChild("Backpack")
-				        if bp then
-        					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
-        					if lightTool then 
-        					    char.Humanoid:EquipTool(lightTool)
-        					else
-        						for _, v in pairs(bp:GetChildren()) do if v:IsA("Tool") then char.Humanoid:EquipTool(v); break end end
-        					end
-        				end
+				    -- Logic cũ lúc chưa Endgame
+				    if not char:FindFirstChildWhichIsA("Tool") and bp then
+    					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
+    					if lightTool then 
+    					    char.Humanoid:EquipTool(lightTool)
+    					else
+    						for _, v in pairs(bp:GetChildren()) do if v:IsA("Tool") then char.Humanoid:EquipTool(v); break end end
+    					end
     				end
 				end
 			end
