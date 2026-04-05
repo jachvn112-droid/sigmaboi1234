@@ -141,7 +141,8 @@ local KILL_AURA_RANGE = 50
 local FARM_HEIGHT = 20 
 local NPC_ROLL_CFRAME = CFrame.new(408.244568, 2.82981968, 802.734131, -0.156446099, 0, 0.987686574, 0, 1, 0, -0.987686574, 0, -0.156446099)
 
-local homeIsland, lastAcceptTime, currentChoosenpc, currentTargetNPC, prevChoosenpc, lockedPos, homePortal
+local homeIsland, currentChoosenpc, currentTargetNPC, prevChoosenpc, lockedPos, homePortal
+local lastAcceptTime = 0
 
 local mobConfig = {
 	["Thief"] = { island = "Starter", zoneId = "StarterIsland" },
