@@ -296,31 +296,36 @@ end)
 task.spawn(function()
 	while task.wait(0.5) do
 		if _G.IsRollingFruit then task.wait(1); continue end
-
-		-- ÉP BUỘC CẦM VŨ KHÍ BẰNG LỆNH CỦA SERVER
+-- ÉP BUỘC CẦM VŨ KHÍ CÓ CHỐNG SPAM & CHỐNG LỖI KHI CHẾT
 		pcall(function()
-			if Player.Character then
+			local char = Player.Character
+			if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
 				local bp = Player:FindFirstChild("Backpack")
 				if bp then
 				    -- ENDGAME: Ép Server móc Strongest In History ra dùng
 				    if _G.EndgameStarted then
-				        -- Nếu thấy nó nằm trong túi (tức là chưa cầm trên tay)
-				        if bp:FindFirstChild("Strongest In History") then
-				            local equipRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("EquipWeapon")
-				            if equipRemote then
-				                equipRemote:FireServer("Equip", "Strongest In History")
-				            else
-				                -- Backup lỡ Remote hỏng
-				                Player.Character.Humanoid:EquipTool(bp["Strongest In History"])
+				        -- CHỈ GỬI LỆNH KHI TRÊN TAY CHƯA CẦM VŨ KHÍ NÀY
+				        if not char:FindFirstChild("Strongest In History") and not char:FindFirstChild("StrongestinHistory") then
+				            if bp:FindFirstChild("Strongest In History") or bp:FindFirstChild("StrongestinHistory") then
+				                local equipRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("EquipWeapon")
+				                if equipRemote then
+				                    equipRemote:FireServer("Equip", "Strongest In History")
+				                    task.wait(1.5) -- Đợi 1.5s cho vũ khí hiện lên tay, chống spam rút/cất liên tục
+				                else
+				                    char.Humanoid:EquipTool(bp:FindFirstChild("Strongest In History") or bp:FindFirstChild("StrongestinHistory"))
+				                end
 				            end
 				        end
 				    else
-				        -- Chưa Endgame thì xài Light hoặc vũ khí cũ
-    					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
-    					if lightTool then Player.Character.Humanoid:EquipTool(lightTool)
-    					elseif not Player.Character:FindFirstChildWhichIsA("Tool") then
-    						for _, v in pairs(bp:GetChildren()) do if v:IsA("Tool") then Player.Character.Humanoid:EquipTool(v); break end end
-    					end
+				        -- Chưa Endgame thì xài Light hoặc vũ khí cũ (Chỉ equip khi tay đang trống)
+				        if not char:FindFirstChildWhichIsA("Tool") then
+        					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
+        					if lightTool then 
+        					    char.Humanoid:EquipTool(lightTool)
+        					else
+        						for _, v in pairs(bp:GetChildren()) do if v:IsA("Tool") then char.Humanoid:EquipTool(v); break end end
+        					end
+        				end
     				end
 				end
 			end
