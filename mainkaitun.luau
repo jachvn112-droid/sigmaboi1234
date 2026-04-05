@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 🔥 KAITUN SAILOR 2 (BẢN ĐỘ ENDGAME SUKUNA)
+-- 🔥 KAITUN SAILOR 2 (BẢN ĐỘ ENDGAME SUKUNA - CHỐNG CRASH TUYỆT ĐỐI)
 -- ==============================================================================
 
 local Players = game:GetService("Players")
@@ -25,7 +25,7 @@ local rollRemote = ReplicatedStorage:WaitForChild("RemoteEvents"):FindFirstChild
 _G.IsRollingFruit = false
 _G.HasLightFruit = false
 _G.StatsResetDone = false
-_G.EndgameStarted = _G.EndgameStarted or false -- CÔNG TẮC ENDGAME CHO SUKUNA
+_G.EndgameStarted = _G.EndgameStarted or false 
 
 local farmStatus = "Starting..."
 local taskStatus = "Getting quest..."
@@ -120,7 +120,6 @@ task.spawn(function()
 			local data = Player:FindFirstChild("Data")
 			local level = data and data:FindFirstChild("Level") and data.Level.Value or "?"
 			local money = data and data:FindFirstChild("Money") and data.Money.Value or 0
-			local gems = data and data:FindFirstChild("Gems") and data.Gems.Value or 0
 
 			main.Status.Text = _G.IsRollingFruit and "Auto Farm: PAUSED (Rolling Fruit)" or "Auto Farm: " .. farmStatus
 			main.Task.Text = "Task: " .. taskStatus
@@ -141,8 +140,9 @@ local KILL_AURA_RANGE = 50
 local FARM_HEIGHT = 20 
 local NPC_ROLL_CFRAME = CFrame.new(408.244568, 2.82981968, 802.734131, -0.156446099, 0, 0.987686574, 0, 1, 0, -0.987686574, 0, -0.156446099)
 
+-- FIX TUYỆT ĐỐI CHỐNG CRASH TẠI ĐÂY
 local homeIsland, currentChoosenpc, currentTargetNPC, prevChoosenpc, lockedPos, homePortal
-local lastAcceptTime = 0
+local lastAcceptTime = 0 
 
 local mobConfig = {
 	["Thief"] = { island = "Starter", zoneId = "StarterIsland" },
@@ -239,7 +239,7 @@ end
 task.spawn(function()
 	while task.wait(3) do
 		_G.HasLightFruit = checkHasLight()
-		if _G.HasLightFruit or _G.EndgameStarted then continue end -- BỎ QUA NẾU ENDGAME
+		if _G.HasLightFruit or _G.EndgameStarted then continue end 
 
 		local data = Player:FindFirstChild("Data")
 		if not data then continue end
@@ -301,9 +301,9 @@ task.spawn(function()
 			if Player.Character then
 				local bp = Player:FindFirstChild("Backpack")
 				if bp then
-				    -- ENDGAME: Ưu tiên cầm Strongest In History
+				    -- ENDGAME EQUIP
 				    if _G.EndgameStarted then
-				        local class = bp:FindFirstChild("Strongest In History") or bp:FindFirstChild("StrongestinHistory")
+				        local class = bp:FindFirstChild("Strongest In History")
 				        if class then Player.Character.Humanoid:EquipTool(class) end
 				    else
     					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
@@ -327,6 +327,7 @@ task.spawn(function()
 
 		currentTargetNPC = targetNPC; currentChoosenpc = choosenpc
 
+		-- ĐÃ CÓ BẢO HIỂM lastAcceptTime
 		if tick() - lastAcceptTime > 5 then pcall(function() questAcceptR:FireServer(targetNPC) end); lastAcceptTime = tick(); task.wait(0.5) end
 
 		local hrp = getRoot()
@@ -360,6 +361,8 @@ task.spawn(function()
 					lastCheck = tick()
 					local _, _, newChoose = getTargetQuest()
 					if newChoose ~= currentChoosenpc then pcall(function() questAbandonR:FireServer("repeatable") end); lockedPos = nil; homeIsland = nil; homePortal = nil; cleanupXenoStabilizers(); break end
+					
+					-- ĐÃ CÓ BẢO HIỂM lastAcceptTime
 					if tick() - lastAcceptTime > 5 then pcall(function() questAcceptR:FireServer(currentTargetNPC) end); lastAcceptTime = tick() end
 				end
 			end
@@ -414,11 +417,11 @@ task.spawn(function()
 	end
 end)
 
--- TỰ ĐỘNG CỘNG ĐIỂM (TẮT KHI Ở ENDGAME)
+-- TỰ ĐỘNG CỘNG ĐIỂM 
 task.spawn(function()
 	local getStatsRemote = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("GetPlayerStats")
 	while task.wait(1.5) do
-		if _G.IsRollingFruit or _G.EndgameStarted then continue end -- BỎ QUA NẾU ENDGAME
+		if _G.IsRollingFruit or _G.EndgameStarted then continue end 
 
 		if _G.HasLightFruit then
 			local powerVal = nil
