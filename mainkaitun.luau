@@ -137,7 +137,7 @@ task.spawn(function()
 end)
 
 local KILL_AURA_RANGE = 50
-local FARM_HEIGHT = 20 
+local FARM_HEIGHT = 15
 local NPC_ROLL_CFRAME = CFrame.new(408.244568, 2.82981968, 802.734131, -0.156446099, 0, 0.987686574, 0, 1, 0, -0.987686574, 0, -0.156446099)
 
 -- FIX TUYỆT ĐỐI CHỐNG CRASH TẠI ĐÂY
