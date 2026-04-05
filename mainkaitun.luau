@@ -415,29 +415,71 @@ task.spawn(function()
 	end
 end)
 
+-- ==============================================================================
+-- THREAD 4: AUTO SKILL (CÓ PHÂN LOẠI SKILL RIÊNG CHO SUKUNA)
+-- ==============================================================================
 task.spawn(function()
 	local abilityRemote = ReplicatedStorage:WaitForChild("AbilitySystem"):WaitForChild("Remotes"):WaitForChild("RequestAbility")
 	local fruitPowerRemote = ReplicatedStorage:WaitForChild("RemoteEvents"):WaitForChild("FruitPowerRemote")
+	
 	local lightKeys = { Enum.KeyCode.Z, Enum.KeyCode.X, Enum.KeyCode.C }
+	
+	-- 👑 BỘ SKILL SẾP MUỐN SET RIÊNG CHO CLASS SUKUNA (STRONGEST IN HISTORY)
+	-- Sếp có thể tự do thêm/bớt số ở đây. Ví dụ chỉ xài chiêu 1, 3, 5 thì để {1, 3, 5}
+	local sukunaSkills = { 3, 4} 
+
 	while task.wait(0.3) do
 		if _G.IsRollingFruit then continue end
+		
 		local npcsFolder = workspace:FindFirstChild("NPCs")
 		local root = getRoot()
 		local mobPos = nil
+		
+		-- Tìm tọa độ quái gần nhất để ném skill trúng đích
 		if npcsFolder and root then
 			local closestDist = math.huge
 			for _, npc in pairs(npcsFolder:GetChildren()) do
 				local hum = npc:FindFirstChildOfClass("Humanoid")
 				local pos = getMobPos(npc)
-				if hum and hum.Health > 0 and pos then local dist = (root.Position - pos).Magnitude; if dist < closestDist then closestDist = dist; mobPos = pos end end
+				if hum and hum.Health > 0 and pos then 
+				    local dist = (root.Position - pos).Magnitude
+				    if dist < closestDist then closestDist = dist; mobPos = pos end 
+				end
 			end
 		end
 
-		for skillId = 1, 5 do pcall(function() if mobPos then abilityRemote:FireServer(skillId, mobPos) else abilityRemote:FireServer(skillId) end end) end
+		-- 🔪 CHIA LUỒNG XẢ SKILL
+		if _G.EndgameStarted then
+		    -- LUỒNG 1: ĐÃ TỐT NGHIỆP THÀNH SUKUNA
+		    -- Chỉ xả những chiêu sếp đã cài đặt trong bảng sukunaSkills ở trên
+		    for _, skillId in ipairs(sukunaSkills) do 
+		        pcall(function() 
+		            if mobPos then abilityRemote:FireServer(skillId, mobPos) 
+		            else abilityRemote:FireServer(skillId) end 
+		        end) 
+		    end
+		    
+		    -- (Nếu Class Sukuna này có xài chiêu bằng phím Z X C V thay vì 1 2 3 4 5, 
+		    -- sếp có thể gọi thêm các Remote tương ứng ở đây y như trái Light!)
+		    
+		else
+		    -- LUỒNG 2: CÒN LÀ TÂN THỦ
+		    -- Xả full skill 1 đến 5 của vũ khí rác
+		    for skillId = 1, 5 do 
+		        pcall(function() 
+		            if mobPos then abilityRemote:FireServer(skillId, mobPos) 
+		            else abilityRemote:FireServer(skillId) end 
+		        end) 
+		    end
 
-		if _G.HasLightFruit and not _G.EndgameStarted then
-			for _, key in ipairs(lightKeys) do pcall(function() fruitPowerRemote:FireServer(unpack({"UseAbility", {FruitPower = "Light", KeyCode = key}})) end) end
+            -- Xả thêm skill Z X C của trái Light (nếu có)
+		    if _G.HasLightFruit then
+			    for _, key in ipairs(lightKeys) do 
+			        pcall(function() fruitPowerRemote:FireServer(unpack({"UseAbility", {FruitPower = "Light", KeyCode = key}})) end) 
+			    end
+		    end
 		end
+		
 	end
 end)
 
