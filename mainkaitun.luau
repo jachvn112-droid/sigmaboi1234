@@ -297,34 +297,40 @@ task.spawn(function()
 	while task.wait(0.5) do
 		if _G.IsRollingFruit then task.wait(1); continue end
 
-		-- HỆ THỐNG TRANG BỊ VŨ KHÍ THÔNG MINH (CHỐNG LỖI KHI CHẾT)
+		-- HỆ THỐNG ÉP TRANG BỊ VŨ KHÍ (VƯỢT RÀO CUSTOM INVENTORY)
 		pcall(function()
 			local char = Player.Character
 			if char and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
-				local bp = Player:FindFirstChild("Backpack")
-				if bp then
-				    -- 👑 NẾU ĐANG Ở ENDGAME
-				    if _G.EndgameStarted then
-				        -- 1. Nếu trên tay đã cầm sẵn Strongest In History -> Xong, không làm gì cả
-				        if char:FindFirstChild("Strongest In History") or char:FindFirstChild("StrongestinHistory") then 
-				            return 
+				
+				-- 👑 NẾU ĐANG Ở ENDGAME
+				if _G.EndgameStarted then
+				    -- 1. Quét xem trên tay CÓ ĐANG CẦM class Sukuna không?
+				    local equipped = false
+				    for _, v in pairs(char:GetChildren()) do
+				        if string.find(string.lower(v.Name), "strongest") then
+				            equipped = true
+				            break
 				        end
-				        
-				        -- 2. Nếu nó đang nằm trong túi đồ (Slots) -> Dùng lệnh rút vũ khí ra
-				        local weaponInBag = bp:FindFirstChild("Strongest In History") or bp:FindFirstChild("StrongestinHistory")
-				        if weaponInBag then
-				            char.Humanoid:EquipTool(weaponInBag)
-				        else
-				            -- 3. Lỡ chết rơi mất tiêu, không có trong túi -> Gọi Server lôi từ Kho ra
+				    end
+				    
+				    -- 2. Nếu tay đang trống (Do vừa chết, hoặc do sếp cố tình bấm phím 1 cất đi)
+				    if not equipped then
+				        -- Đợi 2 giây sau mỗi lần gọi để chống spam "rút/cất" liên tục
+				        if tick() - (_G.LastEquipFire or 0) > 2 then
+				            _G.LastEquipFire = tick()
 				            local equipRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("EquipWeapon")
 				            if equipRemote then
+				                -- Ép Server lôi vũ khí ra (Bất chấp nó đang trong túi hay trong kho)
 				                equipRemote:FireServer("Equip", "Strongest In History")
 				            end
 				        end
-				        
-				    -- ⚔️ NẾU CHƯA ENDGAME (Xài Light hoặc vũ khí cũ)
-				    else
-				        if not char:FindFirstChildWhichIsA("Tool") then
+				    end
+				    
+				-- ⚔️ NẾU CHƯA ENDGAME (Logic cũ cho lúc farm tân thủ)
+				else
+				    if not char:FindFirstChildWhichIsA("Tool") then
+				        local bp = Player:FindFirstChild("Backpack")
+				        if bp then
         					local lightTool = bp:FindFirstChild("Light Fruit") or bp:FindFirstChild("Light")
         					if lightTool then 
         					    char.Humanoid:EquipTool(lightTool)
