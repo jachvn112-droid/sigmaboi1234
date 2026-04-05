@@ -1,5 +1,5 @@
 -- ==============================================================================
--- 👑 SCRIPT AUTOFARM SUKUNA V2 (V12 - TWEEN TELEPORT + STABLE INVENTORY)
+-- 👑 SCRIPT AUTOFARM SUKUNA V2 (V13 - AUTO EQUIP CLASS & STABLE TWEEN)
 -- ==============================================================================
 
 if getgenv().TestSukunaFarm then
@@ -66,6 +66,7 @@ local combatHit = CombatRemotes:WaitForChild("RequestHit")
 local abilityReq = AbilityRemotes:WaitForChild("RequestAbility")
 local fruitPowerReq = GlobalRemotes:WaitForChild("FruitPowerRemote")
 local useItemRemote = Remotes:WaitForChild("UseItem")
+local equipWeaponRemote = Remotes:WaitForChild("EquipWeapon") -- Lệnh Equip Class
 
 -- ═══════════════════════════════════════
 -- CONSTANTS & VARIABLES
@@ -78,19 +79,21 @@ local NPC_CFRAME = CFrame.new(756.397949, 89.1463165, -1952.93628, -0.779544473,
 
 local REQ_RING, REQ_SOUL, REQ_FLESH, REQ_FINGER = 7, 3, 1, 20
 local REQ_TITLE = "Disgraced One"
+local TARGET_CLASS_NAME = "Strongest In History"
 
 _G.InventoryData = {}
 _G.HasTitle = false
 _G.BossRushMode = false
 _G.AutoFingersEaten = nil 
 _G.AutoCheckAttempts = 0
+_G.HasStrongestClass = false -- Biến kiểm tra xem đã có Class chưa
 
 local CurrentTarget = nil 
 local lastDebugPrint = 0
 local SAVE_FILE_NAME = "SukunaFarmSave.txt"
 
 print("\n==================================================")
-print("👑 AUTOFARM SUKUNA V2 (V12 - TWEEN & STABLE) 👑")
+print("👑 AUTOFARM SUKUNA V2 (V13 - FULL AUTO EQUIP) 👑")
 print("==================================================\n")
 
 -- ═══════════════════════════════════════
@@ -166,7 +169,7 @@ local function smartTeleport(targetPortalName, expectedZoneId)
 end
 
 -- ═══════════════════════════════════════
--- THREAD 1: FORENSIC INVENTORY (BẢN KHÓA GỐC - CHỐNG TỤT KEY)
+-- THREAD 1: FORENSIC INVENTORY (CẬP NHẬT KIỂM TRA CLASS)
 -- ═══════════════════════════════════════
 task.spawn(function()
     local inventoryRef = nil 
@@ -176,7 +179,7 @@ task.spawn(function()
         pcall(function() reqInventory:FireServer() end)
         task.wait(1.5) 
         
-        -- Khóa mục tiêu vào đúng bảng Inventory của game
+        -- Khóa mục tiêu vào bảng Inventory
         if not inventoryRef and type(getconnections) == "function" then
             pcall(function()
                 for _, conn in pairs(getconnections(updateInventory.OnClientEvent)) do
@@ -194,9 +197,12 @@ task.spawn(function()
             end)
         end
 
-        -- Lọc dữ liệu chống x2
+        -- Lọc dữ liệu chống x2 và KIỂM TRA SỞ HỮU CLASS
         if inventoryRef then
             local tempInv = {}
+            _G.HasStrongestClass = false -- Reset để check lại
+            
+            -- Check tab Item/Material
             for _, items in pairs(inventoryRef) do
                 if type(items) == "table" then
                     for _, item in pairs(items) do
@@ -207,6 +213,17 @@ task.spawn(function()
                     end
                 end
             end
+            
+            -- Check tab Melee xem có Class chưa
+            if inventoryRef["Melee"] then
+                for _, item in pairs(inventoryRef["Melee"]) do
+                    if type(item) == "table" and item.name and string.lower(item.name) == string.lower(TARGET_CLASS_NAME) then
+                        _G.HasStrongestClass = true
+                        break
+                    end
+                end
+            end
+            
             _G.InventoryData = tempInv
         end
 
@@ -248,6 +265,24 @@ task.spawn(function()
         
         local root = getRoot() if not root then continue end
         for _, part in pairs(Player.Character:GetChildren()) do if part:IsA("BasePart") then part.CanCollide = false end end
+
+        -- ⚡ ƯU TIÊN TỐI THƯỢNG: ĐÃ CÓ CLASS THÌ TỰ TRANG BỊ VÀ TẮT SCRIPT
+        if _G.HasStrongestClass then
+            print("🎉 PHÁT HIỆN ĐÃ SỞ HỮU [" .. TARGET_CLASS_NAME .. "]!")
+            CurrentTarget = nil
+            applyXenoStabilizers(root, root.CFrame)
+            
+            print("⚔️ Đang tự động trang bị Class...")
+            local args = {"Equip", TARGET_CLASS_NAME}
+            pcall(function() equipWeaponRemote:FireServer(unpack(args)) end)
+            
+            task.wait(1.5)
+            print("✅ Đã trang bị thành công! Hoàn thành sứ mệnh, tự động tắt Script.")
+            
+            getgenv().TestSukunaFarm = false
+            cleanupXenoStabilizers()
+            return
+        end
 
         -- ⚡ ƯU TIÊN 0: KHỞI ĐỘNG - TWEEN ĐẾN NPC ĐỂ CHECK UI
         if _G.AutoFingersEaten == nil then
@@ -376,7 +411,15 @@ task.spawn(function()
                     fireproximityprompt(prompt)
                     print("🎉 HOÀN TẤT! ĐÃ GỬI LỆNH MUA CLASS SUKUNA THÀNH CÔNG!")
                     
-                    task.wait(2)
+                    task.wait(2.5) -- Đợi Server load class vào túi đồ
+                    
+                    print("⚔️ Đang tự động trang bị Class...")
+                    local equipArgs = {"Equip", TARGET_CLASS_NAME}
+                    pcall(function() equipWeaponRemote:FireServer(unpack(equipArgs)) end)
+                    
+                    print("✅ Đã trang bị thành công! Sếp ra test skill khè Server được rồi đó!")
+                    
+                    task.wait(1.5)
                     getgenv().TestSukunaFarm = false
                     cleanupXenoStabilizers()
                     return
