@@ -18,6 +18,21 @@ local TweenService = game:GetService("TweenService")
 local Player = Players.LocalPlayer
 
 -- ═══════════════════════════════════════
+-- 🛡️ BYPASS ANTI-CHEAT (DashRemote)
+-- ═══════════════════════════════════════
+local RunService = game:GetService("RunService")
+local dashRemote = ReplicatedStorage:FindFirstChild("RemoteEvents") and ReplicatedStorage.RemoteEvents:FindFirstChild("DashRemote")
+if dashRemote then 
+    print("[BYPASS] Đã bật khiên chống Rubber-Banding!")
+    RunService.Heartbeat:Connect(function()
+        task.spawn(function()
+            pcall(function() dashRemote:FireServer(Vector3.new(0, 0, 0), 0, false) end)
+        end)
+    end)
+end
+task.wait(1)
+
+-- ═══════════════════════════════════════
 -- 🛡️ ANTI AFK & AUTO REJOIN
 -- ═══════════════════════════════════════
 Player.Idled:Connect(function()
@@ -294,20 +309,12 @@ task.spawn(function()
             
             local dist = (root.Position - NPC_CFRAME.Position).Magnitude
             
-            -- Nếu đứng xa NPC quá 15m -> Dùng Tween lướt tới
+            -- Nếu đứng xa NPC quá 15m -> Nhờ Bypass mà CFrame thẳng mặt
             if dist > 15 then
-                print("🚶 Đang dùng Tween lướt tới NPC để tránh bị Server kéo về...")
-                local tweenTime = dist / 150 -- Tốc độ lướt an toàn (150 stud/s)
-                local tween = TweenService:Create(root, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = NPC_CFRAME})
-                
-                -- Giữ nhân vật lơ lửng không bị rớt trong lúc lướt
-                local bv = Instance.new("BodyVelocity", root)
-                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero
-                
-                tween:Play()
-                tween.Completed:Wait()
-                if bv then bv:Destroy() end
+                print("🚶 Đang CFrame thẳng tới NPC...")
+                root.CFrame = NPC_CFRAME
+                root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+                root.AssemblyAngularVelocity = Vector3.zero
                 task.wait(0.5) -- Nghỉ một nhịp cho Server cập nhật vị trí mới
             end
             
@@ -373,17 +380,13 @@ task.spawn(function()
             local root = getRoot()
             if not root then continue end
             
-            -- Dùng Tween cho mượt đoạn lướt tới trả Quest
+            -- Dùng CFrame thẳng thay cho Tween nhở có Bypass
             local dist = (root.Position - NPC_CFRAME.Position).Magnitude
             if dist > 15 then
-                local tweenTime = dist / 150
-                local tween = TweenService:Create(root, TweenInfo.new(tweenTime, Enum.EasingStyle.Linear), {CFrame = NPC_CFRAME})
-                local bv = Instance.new("BodyVelocity", root)
-                bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-                bv.Velocity = Vector3.zero
-                tween:Play()
-                tween.Completed:Wait()
-                bv:Destroy()
+                root.CFrame = NPC_CFRAME
+                root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+                root.AssemblyAngularVelocity = Vector3.zero
+                task.wait(0.5)
             end
             
             applyXenoStabilizers(root, NPC_CFRAME)
@@ -437,7 +440,11 @@ task.spawn(function()
                 CurrentTarget = spawnedBoss
                 local targetCF = CFrame.lookAt(mobPos + Vector3.new(0, FARM_HEIGHT, 0), mobPos)
                 applyXenoStabilizers(root, targetCF)
-                if (root.Position - targetCF.Position).Magnitude > 15 then root.CFrame = targetCF else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
+                if (root.Position - targetCF.Position).Magnitude > 15 then 
+                    root.CFrame = targetCF 
+                    root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+                    root.AssemblyAngularVelocity = Vector3.zero
+                else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
             else
                 CurrentTarget = nil; applyXenoStabilizers(root, root.CFrame)
                 print("⚔️ Đang gọi Boss (Còn " .. keys .. " Key)...")
@@ -458,7 +465,11 @@ task.spawn(function()
                 CurrentTarget = naturalBoss
                 local targetCF = CFrame.lookAt(mobPos + Vector3.new(0, FARM_HEIGHT, 0), mobPos)
                 applyXenoStabilizers(root, targetCF)
-                if (root.Position - targetCF.Position).Magnitude > 15 then root.CFrame = targetCF else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
+                if (root.Position - targetCF.Position).Magnitude > 15 then 
+                    root.CFrame = targetCF 
+                    root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+                    root.AssemblyAngularVelocity = Vector3.zero
+                else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
             end
             continue
         end
@@ -472,7 +483,11 @@ task.spawn(function()
             CurrentTarget = curseMob
             local targetCF = CFrame.lookAt(mobPos + Vector3.new(0, FARM_HEIGHT, 0), mobPos)
             applyXenoStabilizers(root, targetCF)
-            if (root.Position - targetCF.Position).Magnitude > 15 then root.CFrame = targetCF else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
+            if (root.Position - targetCF.Position).Magnitude > 15 then 
+                root.CFrame = targetCF 
+                root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+                root.AssemblyAngularVelocity = Vector3.zero
+            else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
         else
             applyXenoStabilizers(root, root.CFrame)
         end
