@@ -8,6 +8,20 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local Player = Players.LocalPlayer
 
+-- ═══════════════════════════════════════
+-- 🛡️ BYPASS ANTI-CHEAT (DashRemote)
+-- ═══════════════════════════════════════
+local dashRemote = ReplicatedStorage:FindFirstChild("RemoteEvents") and ReplicatedStorage.RemoteEvents:FindFirstChild("DashRemote")
+if dashRemote then 
+    print("[BYPASS] Đã bật khiên chống Rubber-Banding!")
+    RunService.Heartbeat:Connect(function()
+        task.spawn(function()
+            pcall(function() dashRemote:FireServer(Vector3.new(0, 0, 0), 0, false) end)
+        end)
+    end)
+end
+task.wait(1)
+
 local questcheck = require(ReplicatedStorage.Modules.QuestConfig)
 local checkmap = require(ReplicatedStorage.TravelConfig)
 local portalCfg = require(ReplicatedStorage.PortalConfig)
@@ -257,9 +271,9 @@ task.spawn(function()
 			local startZoneId, _ = checkmap.GetZoneAt(root.Position)
 			local isAtSailor = (root.Position - NPC_ROLL_CFRAME.Position).Magnitude < 5000
 
-			if not isAtSailor then pcall(function() teleportRemote:FireServer("Sailor") end) repeat task.wait(0.5); root = getRoot() until root and (root.Position - NPC_ROLL_CFRAME.Position).Magnitude < 5000 end
-			
 			root.CFrame = NPC_ROLL_CFRAME
+			root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+			root.AssemblyAngularVelocity = Vector3.zero
 			task.wait(0.5)
 
 			while _G.IsRollingFruit do
@@ -282,9 +296,7 @@ task.spawn(function()
 
 			if startZoneId and startZoneId ~= "SailorIsland" then
 				taskStatus = "Returning to Farm..."
-				local returnPortalArg = string.gsub(startZoneId, "Island", ""):gsub(" ", "")
-				pcall(function() teleportRemote:FireServer(returnPortalArg) end)
-				repeat task.wait(0.5); root = getRoot() until checkmap.GetZoneAt(root.Position) == startZoneId
+				if lockedPos then root.CFrame = lockedPos end
 			end
 			_G.IsRollingFruit = false
 			lockedPos = nil 
@@ -359,7 +371,7 @@ task.spawn(function()
 		local currentZoneId, currentZoneData = checkmap.GetZoneAt(hrp.Position)
 
 		if homeIsland then
-			if currentZoneId ~= homeIsland then farmStatus = "Teleporting..."; pcall(function() teleportRemote:FireServer(homePortal) end); task.wait(0.5) end
+			-- Bypass thẳng cánh, KHÔNG CẦN TELEPORT REMOTE VÀO CỔNG NỮA
 
 			farmStatus = "Farming " .. choosenpc
 			local lastCheck = tick()
@@ -375,7 +387,11 @@ task.spawn(function()
 					local mobPos = getMobPos(npc)
 					local targetCFrame = CFrame.lookAt(mobPos + Vector3.new(0, FARM_HEIGHT, 0), mobPos)
 					applyXenoStabilizers(root, targetCFrame)
-					if (root.Position - targetCFrame.Position).Magnitude > 10 then root.CFrame = targetCFrame else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
+					if (root.Position - targetCFrame.Position).Magnitude > 10 then 
+						root.CFrame = targetCFrame 
+						root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+						root.AssemblyAngularVelocity = Vector3.zero
+					else root.CFrame = CFrame.lookAt(root.Position, mobPos) end
 				else
 					farmStatus = "Waiting respawn..."
 					if root then applyXenoStabilizers(root, root.CFrame) end
@@ -395,7 +411,7 @@ task.spawn(function()
 		end
 
 		local config = mobConfig[choosenpc]
-		if config then homeIsland = config.zoneId; homePortal = config.island; pcall(function() teleportRemote:FireServer(config.island) end); task.wait(1.5) end
+		if config then homeIsland = config.zoneId; homePortal = config.island; task.wait(1) end
 	end
 end)
 
